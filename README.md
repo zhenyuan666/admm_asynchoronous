@@ -7,13 +7,21 @@ In this project, we solve an enormous LASSO problem: A has m = 2,457,600 samples
 To deal with the convergence problem of the asynchronous ADMM algorithm, an hybrid ADMM algorithm is proposed in this project, in which S increases to N gradually. Specifically, S increments by a preset number \Delta S in each master iteration after the number of master iterations reaches a preset cutoff value k_{cut}. The hybrid algorithms blends the convergence guarantee of the synchronous ADMM algorithm and the fast speed of the asynchronous ADMM algorithms. 
 
 To run the code in NERSC's Cori:
+
 srun -N 4 -n 128 --cpu_bind=cores python asynchronous_async.py 128 5 0 200 4800 20000 200
+
 128 is initial S, if S = N, synchronous; if S < N, asynchronous
+
 5 is the \tau
+
 0 is the remote computer (1 is the local Mac machine)
+
 200 is the total number of iterations
+
 4800 is m_i, the number of rows of the local A_i matrix
+
 20000 is n, the number of colomns of the local A_i matrix, the same for all ranks
+
 200 is k_{cutoff}, when k >= k_{cutoff}, the S will increment by 3 after each master iteration, if S < N
 
 
