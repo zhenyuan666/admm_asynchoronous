@@ -24,6 +24,9 @@ srun -N 4 -n 128 --cpu_bind=cores python asynchronous_async.py 128 5 0 200 4800 
 
 200 is k_{cutoff}, when k >= k_{cutoff}, the S will increment by 3 after each master iteration, if S < N
 
+To run locally:
+
+mpirun -np 4 python asynchronous_async.py 4 5 1 400 240 1000 400
 
 References:
 [1] Stephen Boyd, Neal Parikh, Eric Chu, Borja Peleato, and Jonathan Eckstein. Distributed opti- mization and statistical learning via the alternating direction method of multipliers. Foundations and Trends in Machine Learning, 3(1):1–122, 2011.
