@@ -25,8 +25,6 @@ def main():
     else:
         main_folder = '/Users/zhenyuanliu/Dropbox/Spring2018/CS267/project/asychronous/data4/'
     success = lasso_admm(directory = main_folder, num_repeatition = 5, max_iter = num_iters)
-    # print('objective value is : ' + str(total_loss[0]))
-    # print('norm of x_hat is: ' + str(norm(z)))
 
 
 def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 200, abs_tol = 1e-6, rel_tol = 1e-4):
@@ -37,10 +35,6 @@ def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 2
     Output:
             - z      : solution of the Lasso problem
             - objval : objective value
-            - r_norm : primal residual norm
-            - s_norm : dual residual norm
-            - eps_pri: tolerance for primal residual norm
-            - eps_pri: tolerance for dual residual norm
     """
 
     '''
@@ -65,6 +59,7 @@ def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 2
         '''
         print('generating A' + str(rank) + '.npy')
         gen_start = time.time()
+
         # x_true is the same for each rank
         np.random.seed(0)
         x_true = np.random.normal(0, 1, (n, 1))
@@ -76,10 +71,8 @@ def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 2
         v = np.random.normal(0, 1e-3, (m, 1));
         b = np.dot(A, x_true) + v;
         #
-        # m,n = A.shape
         comm.Barrier()
         gen_end = time.time()
-        # print('rank is ' + str(rank) + 'x_true: ' + str(norm(x_true)))
         
         if rank == 0:
             print('data generation time is %f\n' %(gen_end - gen_start))
@@ -108,17 +101,7 @@ def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 2
             factor_end = time.time()
             print('factor time is %f\n' %(factor_end - factor_start))
 
-            print('\n%3s\t%10s\t%10s\t%10s\t%10s\t%10s' %('iter',
-                                                              'r norm', 
-                                                              'eps pri', 
-                                                              's norm', 
-                                                              'eps dual', 
-                                                              'objective'))
             objval     = []
-            r_norm     = []
-            s_norm     = []
-            eps_pri    = []
-            eps_dual   = []
 
             # tau_otherrank : keep track of how many time steps a given rank falls behind rank 0
             tau_otherrank = np.ones((N, 1))
@@ -149,14 +132,6 @@ def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 2
                     ULAq = np.linalg.solve(U, np.linalg.solve(L, A.dot(q)))
                     x = (q * 1./rho)-((A.T.dot(ULAq))*1./(rho**2))
                 inv_time_end = time.time()
-
-                # x = linalg.solve(U, linalg.solve(L, q))
-
-                # send[0] = r.T.dot(r)[0][0] # sum ||r_i||_2^2
-                # send[1] = x.T.dot(x)[0][0] # sum ||x_i||_2^2
-                # send[2] = u.T.dot(u)[0][0]/(rho**2) # sum ||y_i||_2^2
-
-                # zprev = np.copy(z)
 
                 # calculate the local loss
                 local_loss[0] = objective(A, b, mylambda * 1. /N, z)
@@ -199,8 +174,6 @@ def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 2
                         req = comm.irecv(1000000, source = ii, tag = 13)
                         # 
                         to_receive = req.wait()
-                        # if ii == 1:
-                        #     print(type(to_receive))
                         temp1 = to_receive[0:-1, 0]
                         temp2 = to_receive[-1, 0]
                         local_losses[ii, 0] = temp2
@@ -238,26 +211,6 @@ def lasso_admm(directory, num_repeatition, mylambda = .5, rho = 1., max_iter = 2
                         req.wait()
 
                 recv_end_3 = time.time()
-
-                # # diagnostics, reporting, termination checks
-                # # prior residual -> norm(x-z)
-                # r_norm.append(np.sqrt(recv[0])/np.sqrt(N))
-                # # dual residual -> norm(-rho*(z-zold))
-                # s_norm.append(rho * norm(z - zprev))
-                # eps_pri.append(np.sqrt(n) * abs_tol + 
-                #                rel_tol * np.maximum(np.sqrt(recv[1])/np.sqrt(N), norm(z)))
-                # eps_dual.append(np.sqrt(n) * abs_tol + rel_tol * np.sqrt(recv[2])/np.sqrt(N))
-                # print('%4d\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.2f' %(k,\
-                #                                                   r_norm[k],\
-                #                                                   eps_pri[k],\
-                #                                                   s_norm[k],\
-                #                                                   eps_dual[k],\
-                #                                                   objval[k]))
-
-                # if r_norm[k] < eps_pri[k] and s_norm[k] < eps_dual[k] and k > 0:
-                #     break
-                # #Compute primal residual
-                # r = x - z
 
                 total_losses[k, 0] = sum(local_losses)
                 #
